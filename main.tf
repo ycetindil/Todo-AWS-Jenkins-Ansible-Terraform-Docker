@@ -47,7 +47,7 @@ resource "aws_instance" "managed_nodes" {
   vpc_security_group_ids = [aws_security_group.jenkins_project_sg.id]
   iam_instance_profile = aws_iam_instance_profile.jenkins-project-profile.name
   tags = {
-    Name = "${element(var.tags, count.index )}"
+    Name = "${element(var.names, count.index)}"
     stack = "jenkins-project"
     environment = "development"
   }
@@ -83,7 +83,6 @@ resource "aws_security_group" "jenkins_project_sg" {
     to_port     = 5432
     cidr_blocks = ["0.0.0.0/0"]
   }
-
   egress {
     from_port   = 0
     protocol    = -1

@@ -10,7 +10,7 @@ variable "key_name" {
   default = "nvirginia"
 }
 
-variable "tags" {
+variable "names" {
   default = ["postgresql", "nodejs", "react"]
 }
 
