@@ -8,7 +8,7 @@ const Header = () => {
       <div className="text-center">
         <img src={cw} alt="clarusway" className="cw" />
         <h6 className="text-center mt-5">
-          This app has been developed by xxxxyxxx Developers.
+          This app has been developed by some developers.
         </h6>
         <h1 className="text-center mt-5 header-text">X Todos</h1>
       </div>
