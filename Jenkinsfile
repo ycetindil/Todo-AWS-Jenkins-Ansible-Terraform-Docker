@@ -116,7 +116,7 @@ pipeline {
             sh 'docker image prune -af'
         }
         failure {
-            // echo 'Deleting the Image Repository on ECR Due to the Failure'
+            echo 'Deleting the Image Repository on ECR Due to the Failure'
             // sh """
             //     aws ecr delete-repository \
             //       --repository-name ${APP_REPO_NAME} \
