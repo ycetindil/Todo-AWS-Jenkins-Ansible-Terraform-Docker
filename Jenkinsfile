@@ -37,9 +37,9 @@ pipeline {
             }
         }
 
-        stage('Substitute Terraform Outputs') {
+        stage('Substitute Terraform Outputs into .env Files') {
             steps {
-                echo 'Substituting Terraform Outputs'
+                echo 'Substituting Terraform Outputs into .env Files'
                 script {
                     env.NODEJS_IP = sh(script: 'terraform output -raw nodejs_public_ip', returnStdout:true).trim()
                     env.DB_HOST = sh(script: 'terraform output -raw postgresql_private_ip', returnStdout:true).trim()
@@ -89,7 +89,7 @@ pipeline {
                 sh 'ls -l'
                 sh 'ansible --version'
                 sh 'ansible-inventory --graph'
-                ansiblePlaybook credentialsId: 'ssh', disableHostKeyChecking: true, installation: 'ansible', inventory: 'inventory_aws_ec2.yml', playbook: 'playbook.yml'
+                ansiblePlaybook credentialsId: 'nvirginia', disableHostKeyChecking: true, installation: 'ansible', inventory: 'inventory_aws_ec2.yml', playbook: 'playbook.yml'
              }
         }
 
@@ -116,15 +116,15 @@ pipeline {
             sh 'docker image prune -af'
         }
         failure {
-            echo 'Deleting the Image Repository on ECR Due to the Failure'
-            sh """
-                aws ecr delete-repository \
-                  --repository-name ${APP_REPO_NAME} \
-                  --region ${AWS_REGION} \
-                  --force
-                """
-            echo 'Deleting Terraform Stack Due to the Failure'
-                sh 'terraform destroy --auto-approve'
+            // echo 'Deleting the Image Repository on ECR Due to the Failure'
+            // sh """
+            //     aws ecr delete-repository \
+            //       --repository-name ${APP_REPO_NAME} \
+            //       --region ${AWS_REGION} \
+            //       --force
+            //     """
+            // echo 'Deleting Terraform Stack Due to the Failure'
+            //     sh 'terraform destroy --auto-approve'
         }
     }
 }
