@@ -117,14 +117,14 @@ pipeline {
         }
         failure {
             echo 'Deleting the Image Repository on ECR Due to the Failure'
-            // sh """
-            //     aws ecr delete-repository \
-            //       --repository-name ${APP_REPO_NAME} \
-            //       --region ${AWS_REGION} \
-            //       --force
-            //     """
-            // echo 'Deleting Terraform Stack Due to the Failure'
-            //     sh 'terraform destroy --auto-approve'
+            sh """
+                aws ecr delete-repository \
+                  --repository-name ${APP_REPO_NAME} \
+                  --region ${AWS_REGION} \
+                  --force
+                """
+            echo 'Deleting Terraform Stack Due to the Failure'
+                sh 'terraform destroy --auto-approve'
         }
     }
 }

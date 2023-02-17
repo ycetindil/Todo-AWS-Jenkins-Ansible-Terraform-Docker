@@ -81,7 +81,7 @@
     - name: Install the AWS CLI
       shell: ./aws/install
 
-    - name: Login to AWS ec2-user
+    - name: Login to AWS ECR
       shell: |
         export PATH=/usr/local/bin:$PATH
         source ~/.bash_profile
@@ -107,7 +107,7 @@
         ports:
           - "5432:5432"
         env:
-          POSTGRES_PASSWORD: "Pp123456789"
+          POSTGRES_PASSWORD: "{{ postgres_password }}"
         volumes:
           - /db-data:/var/lib/postgresql/data
 
