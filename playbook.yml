@@ -93,13 +93,13 @@
   vars:
     container_name: postgresql
   tasks:
-    - name: Remove {{ container_name }} container and {{ image_name }} if exist
+    - name: Remove container and image if exist
       shell: "docker ps -q --filter 'name={{ container_name }}' && docker stop {{ container_name }} && docker rm -fv {{ container_name }} && docker image rm -f {{ ecr_registry }}/{{ repo_name }}:{{ container_name }} || echo 'Not Found'"
 
     - name: Launch PostgreSQL Docker container
       docker_container:
         name: "{{ container_name }}"
-        image: "{{ image_name }}"
+        image: "{{ ecr_registry }}/{{ repo_name }}:{{ container_name }}"
         state: started
         ports:
           - "5432:5432"
@@ -115,15 +115,14 @@
     - "playbook-vars.yml"
   vars:
     container_name: nodejs
-    image_name: "{{ aws_account }}.dkr.ecr.{{ aws_region }}.amazonaws.com/{{ repo_name }}:{{ container_name }}"
   tasks:
-    - name: Remove {{ container_name }} container and {{ image_name }} if exists
+    - name: Remove container and image if exist
       shell: "docker ps -q --filter 'name={{ container_name }}' && docker stop {{ container_name }} && docker rm -fv {{ container_name }} && docker image rm -f {{ ecr_registry }}/{{ repo_name }}:{{ container_name }} || echo 'Not Found'"
 
     - name: Launch Nodejs docker container
       docker_container:
         name: "{{ container_name }}"
-        image: "{{ image_name }}"
+        image: "{{ ecr_registry }}/{{ repo_name }}:{{ container_name }}"
         state: started
         ports:
           - "5000:5000"
@@ -135,15 +134,14 @@
     - "playbook-vars.yml"
   vars:
     container_name: react
-    image_name: "{{ aws_account }}.dkr.ecr.{{ aws_region }}.amazonaws.com/{{ repo_name }}:{{ container_name }}"
   tasks:
-    - name: remove {{ container_name }} container and {{ image_name }} image if exists
+    - name: Remove container and image if exist
       shell: "docker ps -q --filter 'name={{ container_name }}' && docker stop {{ container_name }} && docker rm -fv {{ container_name }} && docker image rm -f {{ ecr_registry }}/{{ repo_name }}:{{ container_name }} || echo 'Not Found'"
 
     - name: Launch React docker container
       docker_container:
         name: "{{ container_name }}"
-        image: "{{ image_name }}"
+        image: "{{ ecr_registry }}/{{ repo_name }}:{{ container_name }}"
         state: started
         ports:
           - "3000:3000"
