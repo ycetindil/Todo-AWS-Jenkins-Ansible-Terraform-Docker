@@ -1,19 +1,11 @@
-variable "ami" {
-  default = "ami-0f095f89ae15be883"
+variable "prefix" {
+  default = "jenkins-project"
 }
 
-variable "instance_type" {
-  default = "t2.micro"
-}
-
-variable "key_name" {
+variable "ssh_key_name" {
   default = "nvirginia"
 }
 
 variable "names" {
   default = ["postgresql", "nodejs", "react"]
-}
-
-variable "jenkins_project_sg" {
-  default = "jenkins-project-sg"
 }

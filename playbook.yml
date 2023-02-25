@@ -2,9 +2,7 @@
   hosts: _development
   become: true
   vars_files:
-    - "playbook-vars.yml"
-  vars:
-    ecr_registry: "{{ aws_account }}.dkr.ecr.{{ aws_region }}.amazonaws.com"
+    - "/vars/playbook-vars.yml"
   tasks:
     - name: Update all packages
       yum:
@@ -94,10 +92,9 @@
     - "playbook-vars.yml"
   vars:
     container_name: postgresql
-    image_name: "{{ aws_account }}.dkr.ecr.{{ aws_region }}.amazonaws.com/{{ repo_name }}:{{ container_name }}"
   tasks:
     - name: Remove {{ container_name }} container and {{ image_name }} if exist
-      shell: "docker ps -q --filter 'name={{ container_name }}' && docker stop {{ container_name }} && docker rm -fv {{ container_name }} && docker image rm -f {{ image_name }} || echo 'Not Found'"
+      shell: "docker ps -q --filter 'name={{ container_name }}' && docker stop {{ container_name }} && docker rm -fv {{ container_name }} && docker image rm -f {{ ecr_registry }}/{{ repo_name }}:{{ container_name }} || echo 'Not Found'"
 
     - name: Launch PostgreSQL Docker container
       docker_container:
@@ -121,7 +118,7 @@
     image_name: "{{ aws_account }}.dkr.ecr.{{ aws_region }}.amazonaws.com/{{ repo_name }}:{{ container_name }}"
   tasks:
     - name: Remove {{ container_name }} container and {{ image_name }} if exists
-      shell: "docker ps -q --filter 'name={{ container_name }}' && docker stop {{ container_name }} && docker rm -fv {{ container_name }} && docker image rm -f {{ image_name }} || echo 'Not Found'"
+      shell: "docker ps -q --filter 'name={{ container_name }}' && docker stop {{ container_name }} && docker rm -fv {{ container_name }} && docker image rm -f {{ ecr_registry }}/{{ repo_name }}:{{ container_name }} || echo 'Not Found'"
 
     - name: Launch Nodejs docker container
       docker_container:
@@ -141,7 +138,7 @@
     image_name: "{{ aws_account }}.dkr.ecr.{{ aws_region }}.amazonaws.com/{{ repo_name }}:{{ container_name }}"
   tasks:
     - name: remove {{ container_name }} container and {{ image_name }} image if exists
-      shell: "docker ps -q --filter 'name={{ container_name }}' && docker stop {{ container_name }} && docker rm -fv {{ container_name }} && docker image rm -f {{ image_name }} || echo 'Not Found'"
+      shell: "docker ps -q --filter 'name={{ container_name }}' && docker stop {{ container_name }} && docker rm -fv {{ container_name }} && docker image rm -f {{ ecr_registry }}/{{ repo_name }}:{{ container_name }} || echo 'Not Found'"
 
     - name: Launch React docker container
       docker_container:

@@ -7,7 +7,7 @@ terraform {
   }
   backend "s3" {
     bucket = "jenkins-project-2-11-2023"
-    key = "terraform/terraform.tfstate"
+    key    = "terraform/terraform.tfstate"
     region = "us-east-1"
   }
 }
@@ -17,7 +17,7 @@ provider "aws" {
 }
 
 resource "aws_iam_role" "aws_access" {
-  name = "jenkins-project-role"
+  name = "${var.prefix}-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -34,30 +34,27 @@ resource "aws_iam_role" "aws_access" {
   managed_policy_arns = ["arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess"]
 }
 
-resource "aws_iam_instance_profile" "jenkins-project-profile" {
-  name = "jenkins-project-profile"
+resource "aws_iam_instance_profile" "instance_profile" {
+  name = "${var.prefix}-profile"
   role = aws_iam_role.aws_access.name
 }
 
-resource "aws_instance" "managed_nodes" {
-  ami = var.ami
-  count = 3
-  instance_type = var.instance_type
-  key_name = var.key_name
-  vpc_security_group_ids = [aws_security_group.jenkins_project_sg.id]
-  iam_instance_profile = aws_iam_instance_profile.jenkins-project-profile.name
+resource "aws_instance" "ec2_instance" {
+  count                  = 3
+  ami                    = "ami-0f095f89ae15be883"
+  instance_type          = "t2.micro"
+  key_name               = var.ssh_key_name
+  vpc_security_group_ids = [aws_security_group.sg.id]
+  iam_instance_profile   = aws_iam_instance_profile.instance_profile.name
   tags = {
-    Name = "${element(var.names, count.index)}"
-    stack = "jenkins-project"
+    Name        = "${element(var.names, count.index)}"
+    stack       = var.prefix
     environment = "development"
   }
 }
 
-resource "aws_security_group" "jenkins_project_sg" {
-  name = var.jenkins_project_sg
-  tags = {
-    Name = var.jenkins_project_sg
-  }
+resource "aws_security_group" "sg" {
+  name = "${var.prefix}-sg"
 
   ingress {
     from_port   = 22
@@ -65,24 +62,28 @@ resource "aws_security_group" "jenkins_project_sg" {
     to_port     = 22
     cidr_blocks = ["0.0.0.0/0"]
   }
+
   ingress {
     from_port   = 5000
     protocol    = "tcp"
     to_port     = 5000
     cidr_blocks = ["0.0.0.0/0"]
   }
+
   ingress {
     from_port   = 3000
     protocol    = "tcp"
     to_port     = 3000
     cidr_blocks = ["0.0.0.0/0"]
   }
+
   ingress {
     from_port   = 5432
     protocol    = "tcp"
     to_port     = 5432
     cidr_blocks = ["0.0.0.0/0"]
   }
+
   egress {
     from_port   = 0
     protocol    = -1
