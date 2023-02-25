@@ -2,7 +2,7 @@
   hosts: _development
   become: true
   vars_files:
-    - "/playbook-vars.yml"
+    - "playbook-vars.yml"
   tasks:
     - name: Update all packages
       yum:
