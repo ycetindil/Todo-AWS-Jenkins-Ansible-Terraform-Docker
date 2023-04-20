@@ -1,8 +1,5 @@
 pipeline {
     agent any
-    // tools {
-    //     terraform 'terraform'
-    // }
 
     environment {
         PIPELINE_NAME  = "todo-app"
@@ -99,9 +96,9 @@ pipeline {
                 timeout(time:5, unit:'DAYS') {
                     input message:'Do you want to terminate?'
                 }
-                echo 'Deleting All Local Images'
+                echo 'Deleting all local images'
                 sh 'docker image prune -af'
-                echo 'Deleting the Image Repository on ECR'
+                echo 'Deleting the ECR'
                 sh """
                 aws ecr delete-repository \
                 --repository-name ${APP_REPO_NAME} \
@@ -109,7 +106,7 @@ pipeline {
                 --force
                 """
                 dir("/var/lib/jenkins/workspace/${PIPELINE_NAME}/infra-tf") {
-                    echo 'Deleting Terraform Stack'
+                    echo 'Deleting Terraform stack'
                     sh 'terraform destroy --auto-approve'
                 }
             }
