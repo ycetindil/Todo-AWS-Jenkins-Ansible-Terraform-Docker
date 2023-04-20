@@ -1,4 +1,4 @@
-output "react_ip" {
+output "react_url" {
   value = "http://${aws_instance.ec2_instance[2].public_ip}:3000"
 }
 
