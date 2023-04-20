@@ -1,29 +1,31 @@
 pipeline {
     agent any
-    tools {
-        terraform 'terraform'
-    }
+    // tools {
+    //     terraform 'terraform'
+    // }
 
     environment {
-        AWS_REGION = "us-east-1"
+        PIPELINE_NAME  = "todo-app"
+        AWS_REGION     = "us-east-1"
         AWS_ACCOUNT_ID = sh(script:'export PATH="$PATH:/usr/local/bin" && aws sts get-caller-identity --query Account --output text', returnStdout:true).trim()
-        ECR_REGISTRY = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
-        APP_REPO_NAME = "ycetindil/jenkins-project"
-        APP_NAME = "todo"
+        ECR_REGISTRY   = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+        APP_REPO_NAME  = "ycetindil/jenkins-project"
     }
 
     stages {
-        stage('Create Infrastructure for the App') {
+        stage('Create Infrastructure on AWS') {
             steps {
-                echo 'Creating Infrastructure for the App on AWS Cloud'
-                sh 'terraform init'
-                sh 'terraform apply --auto-approve'
+                dir("/var/lib/jenkins/workspace/${PIPELINE_NAME}/infra-tf") {
+                    echo 'Creating Infrastructure on AWS Cloud'
+                    sh 'terraform init'
+                    sh 'terraform apply --auto-approve'
+                }
             }
         }
 
         stage('Create ECR Repo') {
             steps {
-                echo 'Creating ECR Repo for App'
+                echo 'Creating ECR Repo'
                 sh """
                 aws ecr create-repository \
                   --repository-name ${APP_REPO_NAME} \
@@ -36,17 +38,19 @@ pipeline {
 
         stage('Substitute Terraform Outputs into .env Files') {
             steps {
-                echo 'Substituting Terraform Outputs into .env Files'
-                script {
-                    env.NODEJS_IP = sh(script: 'terraform output -raw nodejs_public_ip', returnStdout:true).trim()
-                    env.DB_HOST = sh(script: 'terraform output -raw postgresql_private_ip', returnStdout:true).trim()
+                dir("/var/lib/jenkins/workspace/${PIPELINE_NAME}/infra-tf") {
+                    echo 'Substituting Terraform Outputs into .env Files'
+                    script {
+                        env.NODEJS_IP = sh(script: 'terraform output -raw nodejs_public_ip', returnStdout:true).trim()
+                        env.DB_HOST = sh(script: 'terraform output -raw postgresql_private_ip', returnStdout:true).trim()
+                    }
+                    sh 'echo ${DB_HOST}'
+                    sh 'echo ${NODEJS_IP}'
+                    sh 'envsubst < ../nodejs-env-template > ../nodejs/server/.env'
+                    sh 'cat ../nodejs/server/.env'
+                    sh 'envsubst < ../react-env-template > ../react/client/.env'
+                    sh 'cat ../react/client/.env'
                 }
-                sh 'echo ${DB_HOST}'
-                sh 'echo ${NODEJS_IP}'
-                sh 'envsubst < nodejs-env-template > ./nodejs/server/.env'
-                sh 'cat ./nodejs/server/.env'
-                sh 'envsubst < react-env-template > ./react/client/.env'
-                sh 'cat ./react/client/.env'
             }
         }
 
@@ -90,38 +94,25 @@ pipeline {
              }
         }
 
-        stage('Destroy the Infrastructure'){
-            steps{
-                timeout(time:5, unit:'DAYS'){
+        stage('Destroy the Infrastructure') {
+            steps {
+                timeout(time:5, unit:'DAYS') {
                     input message:'Do you want to terminate?'
                 }
+                echo 'Deleting All Local Images'
+                sh 'docker image prune -af'
+                echo 'Deleting the Image Repository on ECR'
                 sh """
-                docker image prune -af
-                terraform destroy --auto-approve
                 aws ecr delete-repository \
-                  --repository-name ${APP_REPO_NAME} \
-                  --region ${AWS_REGION} \
-                  --force
+                --repository-name ${APP_REPO_NAME} \
+                --region ${AWS_REGION} \
+                --force
                 """
+                dir("/var/lib/jenkins/workspace/${PIPELINE_NAME}/infra-tf") {
+                    echo 'Deleting Terraform Stack'
+                    sh 'terraform destroy --auto-approve'
+                }
             }
-        }
-    }
-
-    post {
-        always {
-            echo 'Deleting All Local Images'
-            sh 'docker image prune -af'
-        }
-        failure {
-            echo 'Deleting the Image Repository on ECR Due to the Failure'
-            sh """
-                aws ecr delete-repository \
-                  --repository-name ${APP_REPO_NAME} \
-                  --region ${AWS_REGION} \
-                  --force
-                """
-            echo 'Deleting Terraform Stack Due to the Failure'
-                sh 'terraform destroy --auto-approve'
         }
     }
 }
