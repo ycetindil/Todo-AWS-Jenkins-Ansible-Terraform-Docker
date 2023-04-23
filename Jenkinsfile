@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         PIPELINE_NAME  = "todo-app"
+        TF_FOLDER      = "infra-tf"
         AWS_REGION     = "us-east-1"
         AWS_ACCOUNT_ID = sh(script:'export PATH="$PATH:/usr/local/bin" && aws sts get-caller-identity --query Account --output text', returnStdout:true).trim()
         ECR_REGISTRY   = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
@@ -12,7 +13,7 @@ pipeline {
     stages {
         stage('Create Infrastructure on AWS') {
             steps {
-                dir("/var/lib/jenkins/workspace/${PIPELINE_NAME}/infra-tf") {
+                dir("/var/lib/jenkins/workspace/${PIPELINE_NAME}/${TF_FOLDER}") {
                     echo 'Creating Infrastructure on AWS Cloud'
                     sh 'terraform init'
                     sh 'terraform apply --auto-approve'
@@ -35,7 +36,7 @@ pipeline {
 
         stage('Substitute Terraform Outputs into .env Files') {
             steps {
-                dir("/var/lib/jenkins/workspace/${PIPELINE_NAME}/infra-tf") {
+                dir("/var/lib/jenkins/workspace/${PIPELINE_NAME}/${TF_FOLDER}") {
                     echo 'Substituting Terraform Outputs into .env Files'
                     script {
                         env.NODEJS_IP = sh(script: 'terraform output -raw nodejs_public_ip', returnStdout:true).trim()
@@ -105,7 +106,7 @@ pipeline {
                 --region ${AWS_REGION} \
                 --force
                 """
-                dir("/var/lib/jenkins/workspace/${PIPELINE_NAME}/infra-tf") {
+                dir("/var/lib/jenkins/workspace/${PIPELINE_NAME}/${TF_FOLDER}") {
                     echo 'Deleting Terraform stack'
                     sh 'terraform destroy --auto-approve'
                 }
