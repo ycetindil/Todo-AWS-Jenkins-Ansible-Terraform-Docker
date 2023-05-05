@@ -1,5 +1,5 @@
 variable "prefix" {
-  default = "jenkins-project"
+  default = "todo-app"
 }
 
 variable "ssh_key_name" {
